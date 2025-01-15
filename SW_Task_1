@@ -1,0 +1,272 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <algorithm>
+#include <iomanip>
+#include <windows.h>
+
+using namespace std;
+
+struct Laptop { 
+    int rank; 
+    string name; 
+    int year; 
+    string place; 
+    double market; 
+    double capital;
+};
+
+void showMenu() {
+    cout << "\nМеню:\n";
+    cout << "1. Показать все компании\n";
+    cout << "2. Отсортировать по доле на рынке\n";
+    cout << "3. Отсортировать по капитализации\n";
+    cout << "4. Отредактировать данные компании\n";
+    cout << "5. Удалить компанию\n";
+    cout << "6. Добавить компанию\n";
+    cout << "7. Поиск рекурсией по рейтингу\n";
+    cout << "8. Поиск итерацией по капитализации\n";
+    cout << "0. Выход\n";
+    cout << "Выберите действие: ";
+}
+
+void loadData(vector<Laptop>& laptops) {
+    laptops = {
+        {1, "Lenovo", 1984, "Китай", 24.8, 16},
+        {2, "HP", 1939, "США", 21.9, 27},
+        {3, "Dell", 1984, "США", 16.6, 28},
+        {4, "Apple", 1976, "США", 9.0, 2890},
+        {5, "Asus", 1989, "Тайвань", 7.1, 11}
+    };
+}
+
+void printLaptop(const Laptop laptop) {
+    cout << "\nМесто в рейтинге: " << laptop.rank;
+    cout << "\nНазвание: " << laptop.name;
+    cout << "\nГод основания: " << laptop.year;
+    cout << "\nДоля на рынке: " << round(laptop.market * 10) / 10 << "%";
+    cout << "\nКапитализация: $" << laptop.capital << " млрд";
+    cout << "\nМесто основания: " << laptop.place;
+    cout << "\n";
+}
+
+void deleteCompany(vector<Laptop>& laptops, int rankToDelete) {
+    bool found = false;
+
+    for (int i = 0; i < laptops.size(); ++i) {
+        if (laptops[i].rank == rankToDelete) {
+            laptops.erase(laptops.begin() + i);
+            found = true;
+            cout << "Компания удалена.\n";
+            break;
+        }
+    }
+
+    if (!found) {
+        cout << "Компания с указанным местом в рейтинге не найдена.\n";
+    }
+}
+
+void editCompany(vector<Laptop>& laptops) {
+    int rank;
+    cout << "Введите место в рейтинге компании, которую хотите отредактировать: ";
+    cin >> rank;
+
+    for (auto& laptop : laptops) {
+        if (laptop.rank == rank) {
+            cout << "Введите новые данные:\n";
+            cout << "Место в рейтинге: ";
+            cin >> laptop.rank;
+            cout << "Название: ";
+            cin >> laptop.name;
+            cout << "Год основания: ";
+            cin >> laptop.year;
+            cout << "Место основания: ";
+            cin >> laptop.place;
+            cout << "Доля на рынке: ";
+            cin >> laptop.market;
+            cout << "Капитализация (в млрд $): ";
+            cin >> laptop.capital;
+            cout << "Данные успешно обновлены!\n";
+            return;
+        }
+    }
+    cout << "Компания с указанным местом в рейтинге не найдена.\n";
+}
+
+void newCompany(vector<Laptop>& laptops) {
+    Laptop laptop;
+    cout << "Введите данные новой компании:\n";
+    cout << "Место в рейтинге: ";
+    cin >> laptop.rank;
+    cout << "Название: ";
+    cin >> laptop.name;
+    cout << "Год основания: ";
+    cin >> laptop.year;
+    cout << "Место основания: ";
+    cin >> laptop.place;
+    cout << "Доля на рынке: ";
+    cin >> laptop.market;
+    cout << "Капитализация (в млрд $): ";
+    cin >> laptop.capital;
+    laptops.push_back(laptop);
+    cout << "Компания добавлена!\n";
+}
+
+bool compareMarket(const Laptop& a, const Laptop& b) {
+    return a.market > b.market;
+}
+
+void sortMarket(vector<Laptop>& laptops) {
+    sort(laptops.begin(), laptops.end(), compareMarket);
+}
+
+bool compareCapital(const Laptop& a, const Laptop& b) {
+    return a.capital > b.capital;
+}
+
+void sortCapital(vector<Laptop>& laptops) {
+    sort(laptops.begin(), laptops.end(), compareCapital);
+}
+
+bool compareCapitalMax(const Laptop& a, const Laptop& b) {
+    return a.capital < b.capital;
+}
+
+void sortCapitalMax(vector<Laptop>& laptops) {
+    sort(laptops.begin(), laptops.end(), compareCapitalMax);
+}
+
+bool compareRankMax(const Laptop& a, const Laptop& b) {
+    return a.rank < b.rank;
+}
+
+void sortRankMax(vector<Laptop>& laptops) {
+    sort(laptops.begin(), laptops.end(), compareRankMax);
+}
+
+void printAny(vector<Laptop> laptops) {
+    for (auto& laptop : laptops) {
+        printLaptop(laptop);
+    }
+}
+
+int binaryMainRank(const vector<Laptop> laptops, int left, int right, int rank) {
+    if (left > right) {
+        return -1;
+    }
+    int mid = left + (right - left) / 2;
+
+    if (laptops[mid].rank == rank) {
+        return mid;
+    }
+    else if (laptops[mid].rank > rank) {
+        return binaryMainRank(laptops, left, mid - 1, rank);
+    }
+    else {
+        return binaryMainRank(laptops, mid + 1, right, rank);
+    }
+}
+
+void binarySearchRecRank(const vector<Laptop> laptops, int rank) {
+    int index = binaryMainRank(laptops, 0, laptops.size() - 1, rank);
+    if (index != -1) {
+        cout << "Компания найдена:\n";
+        printLaptop(laptops[index]);
+    }
+    else {
+        cout << "Компания с таким местом в рейтинге не найдена.\n";
+    }
+}
+
+void binarySearchIt(const vector<Laptop>& laptops, int capital) {
+    int left = 0, right = laptops.size() - 1;
+
+    while (left <= right) {
+        int mid = left + (right - left) / 2;
+        cout << mid;
+
+        if (laptops[mid].capital == capital) {
+            cout << "Компания найдена:\n";
+            printLaptop(laptops[mid]);
+            return;
+        }
+        else if (laptops[mid].capital > capital) {
+            right = mid - 1;
+        }
+        else {
+            left = mid + 1;
+        }
+    }
+
+    cout << "Компания с такой капитализацией не найдена.\n";
+}
+
+int main() {
+
+    SetConsoleCP(1251);
+    SetConsoleOutputCP(1251);
+    
+    cout << "Задание 1\n";
+
+    vector<Laptop> laptops;
+    loadData(laptops);
+
+    while (true) {
+        showMenu();
+        int choice;
+        cin >> choice;
+
+        if (choice == 0) {
+            cout << "Выход из программы...\n";
+            break;
+        }
+
+        switch (choice) {
+        case 1:
+            cout << "\nСписок всех компаний:\n";
+            printAny(laptops);
+            break;
+        case 2:
+            sortMarket(laptops);
+            cout << "\nКомпании, отсортированные по доле на рынке:\n";
+            printAny(laptops);
+            break;
+        case 3:
+            sortCapital(laptops);
+            cout << "\nКомпании, отсортированные по капитализации:\n";
+            printAny(laptops);
+            break;
+        case 4:
+            editCompany(laptops);
+            break;
+        case 5:
+            int marker;
+            cout << "Введите номер в рейтинге компании, которую хотите удалить: ";
+            cin >> marker;
+            deleteCompany(laptops, marker);
+            break;
+        case 6:
+            newCompany(laptops);
+            break;
+        case 7: {
+            int rankfind;
+            cout << "Введите место в рейтинге для поиска: ";
+            cin >> rankfind;
+            sortRankMax(laptops);
+            binarySearchRecRank(laptops, rankfind);
+            break;
+        }
+        case 8: {
+            int capitalfind;
+            cout << "Введите капитализацию для поиска: ";
+            cin >> capitalfind;
+            sortCapitalMax(laptops);
+            binarySearchIt(laptops, capitalfind);
+            break;
+        }
+        }
+    }
+
+    return 0;
+}
