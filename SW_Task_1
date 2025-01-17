@@ -1,100 +1,202 @@
 #include <iostream>
-#include <vector>
 #include <string>
-#include <algorithm>
 #include <iomanip>
 #include <windows.h>
 
 using namespace std;
 
-struct Laptop { 
-    int rank; 
-    string name; 
-    int year; 
-    string place; 
-    double market; 
+struct Laptop {
+    int rank;
+    string name;
+    int year;
+    string place;
+    double market;
     double capital;
 };
+
+struct IndexDoub {
+    double key;
+    int recordIndex;
+};
+
+struct IndexInt {
+    double key;
+    int recordIndex;
+};
+
+const int maxSize = 10;
+Laptop* laptops = new Laptop[maxSize];
+IndexDoub* marketIndex = new IndexDoub[maxSize];
+IndexDoub* capitalIndex = new IndexDoub[maxSize];
+int currentSize = 0;
 
 void showMenu() {
     cout << "\nМеню:\n";
     cout << "1. Показать все компании\n";
-    cout << "2. Отсортировать по доле на рынке\n";
-    cout << "3. Отсортировать по капитализации\n";
-    cout << "4. Отредактировать данные компании\n";
-    cout << "5. Удалить компанию\n";
-    cout << "6. Добавить компанию\n";
+    cout << "2. Сортировать и вывести по доле на рынке (через индекс)\n";
+    cout << "3. Сортировать и вывести по капитализации (через индекс)\n";
+    cout << "4. Добавить компанию\n";
+    cout << "5. Удалить компанию по названию\n";
+    cout << "6. Удалить компанию по месту в рейтинге\n";
     cout << "7. Поиск рекурсией по рейтингу\n";
-    cout << "8. Поиск итерацией по капитализации\n";
+    cout << "8. Поиск итерацией по году основания\n";
+    cout << "9. Редактировать компанию\n";
     cout << "0. Выход\n";
     cout << "Выберите действие: ";
 }
 
-void loadData(vector<Laptop>& laptops) {
-    laptops = {
-        {1, "Lenovo", 1984, "Китай", 24.8, 16},
-        {2, "HP", 1939, "США", 21.9, 27},
-        {3, "Dell", 1984, "США", 16.6, 28},
-        {4, "Apple", 1976, "США", 9.0, 2890},
-        {5, "Asus", 1989, "Тайвань", 7.1, 11}
-    };
+void loadData() {
+    currentSize = 5;
+    laptops[0] = { 1, "Lenovo", 1984, "Китай", 24.8, 16 };
+    laptops[1] = { 2, "HP", 1939, "США", 21.9, 27 };
+    laptops[2] = { 3, "Dell", 1984, "США", 16.6, 28 };
+    laptops[3] = { 4, "Apple", 1976, "США", 9.0, 2890 };
+    laptops[4] = { 5, "Asus", 1989, "Тайвань", 7.1, 11 };
 }
 
-void printLaptop(const Laptop laptop) {
+void printLaptop(const Laptop& laptop) {
     cout << "\nМесто в рейтинге: " << laptop.rank;
     cout << "\nНазвание: " << laptop.name;
     cout << "\nГод основания: " << laptop.year;
     cout << "\nДоля на рынке: " << round(laptop.market * 10) / 10 << "%";
     cout << "\nКапитализация: $" << laptop.capital << " млрд";
-    cout << "\nМесто основания: " << laptop.place;
-    cout << "\n";
+    cout << "\nМесто основания: " << laptop.place << "\n";
 }
 
-void deleteCompany(vector<Laptop>& laptops, int rankToDelete) {
-    bool found = false;
+void buildIndedxDouble(IndexDoub* indexArray, double Laptop::* key) {
+    for (int i = 0; i < currentSize; ++i) {
+        indexArray[i].key = laptops[i].*key;
+        indexArray[i].recordIndex = i;
+    }
 
-    for (int i = 0; i < laptops.size(); ++i) {
-        if (laptops[i].rank == rankToDelete) {
-            laptops.erase(laptops.begin() + i);
-            found = true;
+    for (int i = 1; i < currentSize; ++i) {
+        IndexDoub temp = indexArray[i];
+        int j = i - 1;
+
+        while (j >= 0 && indexArray[j].key < temp.key) {
+            indexArray[j + 1] = indexArray[j];
+            --j;
+        }
+        indexArray[j + 1] = temp;
+    }
+}
+
+void buildIndexInt(IndexInt* indexArray, int Laptop::* key) {
+    for (int i = 0; i < currentSize; ++i) {
+        indexArray[i].key = laptops[i].*key;
+        indexArray[i].recordIndex = i;
+    }
+
+    for (int i = 1; i < currentSize; ++i) {
+        IndexInt temp = indexArray[i];
+        int j = i - 1;
+
+        while (j >= 0 && indexArray[j].key > temp.key) {
+            indexArray[j + 1] = indexArray[j];
+            --j;
+        }
+        indexArray[j + 1] = temp;
+    }
+}
+
+void printByIndex(IndexDoub* indexArray) {
+    for (int i = 0; i < currentSize; ++i) {
+        printLaptop(laptops[indexArray[i].recordIndex]);
+    }
+}
+
+void printByIndex(IndexInt* indexArray) {
+    for (int i = 0; i < currentSize; ++i) {
+        printLaptop(laptops[indexArray[i].recordIndex]);
+    }
+}
+
+void deleteCompanyByName() {
+    string name;
+    cout << "Введите название компании для удаления: ";
+    cin >> name;
+
+    for (int i = 0; i < currentSize; ++i) {
+        if (laptops[i].name == name) {
+            for (int j = i; j < currentSize - 1; ++j) {
+                laptops[j] = laptops[j + 1];
+            }
+            --currentSize;
             cout << "Компания удалена.\n";
-            break;
+            return;
         }
     }
-
-    if (!found) {
-        cout << "Компания с указанным местом в рейтинге не найдена.\n";
-    }
+    cout << "Компания с указанным названием не найдена.\n";
 }
 
-void editCompany(vector<Laptop>& laptops) {
+void deleteCompanyByRank() {
     int rank;
-    cout << "Введите место в рейтинге компании, которую хотите отредактировать: ";
+    cout << "Введите место в рейтинге компании для удаления: ";
     cin >> rank;
 
-    for (auto& laptop : laptops) {
-        if (laptop.rank == rank) {
-            cout << "Введите новые данные:\n";
-            cout << "Место в рейтинге: ";
-            cin >> laptop.rank;
-            cout << "Название: ";
-            cin >> laptop.name;
-            cout << "Год основания: ";
-            cin >> laptop.year;
-            cout << "Место основания: ";
-            cin >> laptop.place;
-            cout << "Доля на рынке: ";
-            cin >> laptop.market;
-            cout << "Капитализация (в млрд $): ";
-            cin >> laptop.capital;
-            cout << "Данные успешно обновлены!\n";
+    for (int i = 0; i < currentSize; ++i) {
+        if (laptops[i].rank == rank) {
+            for (int j = i; j < currentSize - 1; ++j) {
+                laptops[j] = laptops[j + 1];
+            }
+            --currentSize;
+            cout << "Компания удалена.\n";
             return;
         }
     }
     cout << "Компания с указанным местом в рейтинге не найдена.\n";
 }
 
-void newCompany(vector<Laptop>& laptops) {
+void rankRecursive(IndexInt* indexArray, int left, int right, int rank) {
+    if (left > right) {
+        cout << "Компания с указанным местом в рейтинге не найдена.\n";
+        return;
+    }
+
+    int mid = left + (right - left) / 2;
+
+    if (indexArray[mid].key == rank) {
+        cout << "Компания найдена:\n";
+        printLaptop(laptops[indexArray[mid].recordIndex]);
+    }
+    else if (indexArray[mid].key > rank) {
+        rankRecursive(indexArray, left, mid - 1, rank);
+    }
+    else {
+        rankRecursive(indexArray, mid + 1, right, rank);
+    }
+}
+
+void yearIterative(IndexInt* indexArray, int year) {
+    int left = 0;
+    int right = currentSize - 1;
+
+    while (left <= right) {
+        int mid = left + (right - left) / 2;
+
+        if (indexArray[mid].key == year) {
+            cout << "Компания найдена:\n";
+            printLaptop(laptops[indexArray[mid].recordIndex]);
+            return;
+        }
+        else if (indexArray[mid].key > year) {
+            right = mid - 1;
+        }
+        else {
+            left = mid + 1;
+        }
+    }
+
+    cout << "Компания с указанным годом основания не найдена.\n";
+}
+
+
+void newCompany() {
+    if (currentSize >= maxSize) {
+        cout << "Массив заполнен, невозможно добавить новую компанию.\n";
+        return;
+    }
+
     Laptop laptop;
     cout << "Введите данные новой компании:\n";
     cout << "Место в рейтинге: ";
@@ -109,108 +211,58 @@ void newCompany(vector<Laptop>& laptops) {
     cin >> laptop.market;
     cout << "Капитализация (в млрд $): ";
     cin >> laptop.capital;
-    laptops.push_back(laptop);
+
+    laptops[currentSize++] = laptop;
     cout << "Компания добавлена!\n";
 }
 
-bool compareMarket(const Laptop& a, const Laptop& b) {
-    return a.market > b.market;
-}
-
-void sortMarket(vector<Laptop>& laptops) {
-    sort(laptops.begin(), laptops.end(), compareMarket);
-}
-
-bool compareCapital(const Laptop& a, const Laptop& b) {
-    return a.capital > b.capital;
-}
-
-void sortCapital(vector<Laptop>& laptops) {
-    sort(laptops.begin(), laptops.end(), compareCapital);
-}
-
-bool compareCapitalMax(const Laptop& a, const Laptop& b) {
-    return a.capital < b.capital;
-}
-
-void sortCapitalMax(vector<Laptop>& laptops) {
-    sort(laptops.begin(), laptops.end(), compareCapitalMax);
-}
-
-bool compareRankMax(const Laptop& a, const Laptop& b) {
-    return a.rank < b.rank;
-}
-
-void sortRankMax(vector<Laptop>& laptops) {
-    sort(laptops.begin(), laptops.end(), compareRankMax);
-}
-
-void printAny(vector<Laptop> laptops) {
-    for (auto& laptop : laptops) {
-        printLaptop(laptop);
-    }
-}
-
-int binaryMainRank(const vector<Laptop> laptops, int left, int right, int rank) {
-    if (left > right) {
-        return -1;
-    }
-    int mid = left + (right - left) / 2;
-
-    if (laptops[mid].rank == rank) {
-        return mid;
-    }
-    else if (laptops[mid].rank > rank) {
-        return binaryMainRank(laptops, left, mid - 1, rank);
-    }
-    else {
-        return binaryMainRank(laptops, mid + 1, right, rank);
-    }
-}
-
-void binarySearchRecRank(const vector<Laptop> laptops, int rank) {
-    int index = binaryMainRank(laptops, 0, laptops.size() - 1, rank);
-    if (index != -1) {
-        cout << "Компания найдена:\n";
-        printLaptop(laptops[index]);
-    }
-    else {
-        cout << "Компания с таким местом в рейтинге не найдена.\n";
-    }
-}
-
-void binarySearchIt(const vector<Laptop>& laptops, int capital) {
-    int left = 0, right = laptops.size() - 1;
-
-    while (left <= right) {
-        int mid = left + (right - left) / 2;
-        cout << mid;
-
-        if (laptops[mid].capital == capital) {
-            cout << "Компания найдена:\n";
-            printLaptop(laptops[mid]);
-            return;
-        }
-        else if (laptops[mid].capital > capital) {
-            right = mid - 1;
-        }
-        else {
-            left = mid + 1;
+int findIndexByRank(int rank) {
+    for (int i = 0; i < currentSize; ++i) {
+        if (laptops[i].rank == rank) {
+            return i;
         }
     }
+    return -1; 
+}
 
-    cout << "Компания с такой капитализацией не найдена.\n";
+void editCompany(int rank) {
+    int edit = -1;
+
+    for (int i = 0; i < currentSize; ++i) {
+        if (laptops[i].rank == rank)
+            edit = i;
+    }
+
+    if (edit == -1) {
+        cout << "Компания с указанным местом в рейтинге не найдена.\n";
+        return;
+    }
+
+    cout << "Введите новые данные компании:\n";
+    cout << "Место в рейтинге: ";
+    cin >> laptops[edit].rank;
+    cout << "Название: ";
+    cin >> laptops[edit].name;
+    cout << "Год основания: ";
+    cin >> laptops[edit].year;
+    cout << "Место основания: ";
+    cin >> laptops[edit].place;
+    cout << "Доля на рынке: ";
+    cin >> laptops[edit].market;
+    cout << "Капитализация (в млрд $): ";
+    cin >> laptops[edit].capital;
+
+    cout << "Обновленные данные:\n";
+    printLaptop(laptops[edit]);
 }
 
 int main() {
-
     SetConsoleCP(1251);
     SetConsoleOutputCP(1251);
-    
+
     cout << "Задание 1\n";
 
-    vector<Laptop> laptops;
-    loadData(laptops);
+    loadData();
 
     while (true) {
         showMenu();
@@ -224,47 +276,67 @@ int main() {
 
         switch (choice) {
         case 1:
-            cout << "\nСписок всех компаний:\n";
-            printAny(laptops);
+            for (int i = 1; i < currentSize; ++i) {
+                Laptop temp = laptops[i];
+                int j = i - 1;
+
+                while (j >= 0 && laptops[j].rank > temp.rank) {
+                    laptops[j + 1] = laptops[j];
+                    --j;
+                }
+                laptops[j + 1] = temp;
+            }
+
+            for (int i = 0; i < currentSize; ++i) {
+                printLaptop(laptops[i]);
+            }
             break;
         case 2:
-            sortMarket(laptops);
+            buildIndedxDouble(marketIndex, &Laptop::market);
             cout << "\nКомпании, отсортированные по доле на рынке:\n";
-            printAny(laptops);
+            printByIndex(marketIndex);
             break;
         case 3:
-            sortCapital(laptops);
+            buildIndedxDouble(capitalIndex, &Laptop::capital);
             cout << "\nКомпании, отсортированные по капитализации:\n";
-            printAny(laptops);
+            printByIndex(capitalIndex);
             break;
         case 4:
-            editCompany(laptops);
+            newCompany();
             break;
         case 5:
-            int marker;
-            cout << "Введите номер в рейтинге компании, которую хотите удалить: ";
-            cin >> marker;
-            deleteCompany(laptops, marker);
+            deleteCompanyByName();
             break;
         case 6:
-            newCompany(laptops);
+            deleteCompanyByRank();
             break;
         case 7: {
-            int rankfind;
+            int rank;
             cout << "Введите место в рейтинге для поиска: ";
-            cin >> rankfind;
-            sortRankMax(laptops);
-            binarySearchRecRank(laptops, rankfind);
+            cin >> rank;
+            IndexInt rankIndex[maxSize];
+            buildIndexInt(rankIndex, &Laptop::rank);
+            rankRecursive(rankIndex, 0, currentSize - 1, rank);
             break;
         }
         case 8: {
-            int capitalfind;
-            cout << "Введите капитализацию для поиска: ";
-            cin >> capitalfind;
-            sortCapitalMax(laptops);
-            binarySearchIt(laptops, capitalfind);
+            int year;
+            cout << "Введите год основания для поиска: ";
+            cin >> year;
+            IndexInt yearIndex[maxSize];
+            buildIndexInt(yearIndex, &Laptop::year);
+            yearIterative(yearIndex, year);
             break;
         }
+        case 9: {
+            int checkNumber; 
+            cout << "Введите номер компании в рейтинге, которую вы хотите изменить: ";
+            cin >> checkNumber;
+            editCompany(checkNumber);
+        }
+
+        default:
+            cout << "Неверный выбор. Попробуйте еще раз.\n";
         }
     }
 
