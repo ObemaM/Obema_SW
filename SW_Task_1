@@ -63,7 +63,7 @@ void printLaptop(const Laptop& laptop) {
     cout << "\nМесто основания: " << laptop.place << "\n";
 }
 
-void buildIndedxDouble(IndexDoub* indexArray, double Laptop::* key) {
+void buildIndexDouble(IndexDoub* indexArray, double Laptop::* key) {
     for (int i = 0; i < currentSize; ++i) {
         indexArray[i].key = laptops[i].*key;
         indexArray[i].recordIndex = i;
@@ -292,12 +292,12 @@ int main() {
             }
             break;
         case 2:
-            buildIndedxDouble(marketIndex, &Laptop::market);
+            buildIndexDouble(marketIndex, &Laptop::market);
             cout << "\nКомпании, отсортированные по доле на рынке:\n";
             printByIndex(marketIndex);
             break;
         case 3:
-            buildIndedxDouble(capitalIndex, &Laptop::capital);
+            buildIndexDouble(capitalIndex, &Laptop::capital);
             cout << "\nКомпании, отсортированные по капитализации:\n";
             printByIndex(capitalIndex);
             break;
