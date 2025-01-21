@@ -1,3 +1,4 @@
+
 #include <iostream>
 #include <string>
 #include <iomanip>
@@ -111,17 +112,20 @@ void printByIndex(IndexInt* indexArray) {
     }
 }
 
-void deleteCompanyByName() {
+void nameDelete(IndexInt* nameIndex) {
     string name;
     cout << "Введите название компании для удаления: ";
     cin >> name;
 
     for (int i = 0; i < currentSize; ++i) {
-        if (laptops[i].name == name) {
-            for (int j = i; j < currentSize - 1; ++j) {
+        if (laptops[nameIndex[i].recordIndex].name == name) {
+            int toDelete = nameIndex[i].recordIndex;
+
+            for (int j = toDelete; j < currentSize - 1; ++j) {
                 laptops[j] = laptops[j + 1];
             }
             --currentSize;
+
             cout << "Компания удалена.\n";
             return;
         }
@@ -129,18 +133,44 @@ void deleteCompanyByName() {
     cout << "Компания с указанным названием не найдена.\n";
 }
 
-void deleteCompanyByRank() {
-    int rank;
-    cout << "Введите место в рейтинге компании для удаления: ";
-    cin >> rank;
-
+void rankDelete(IndexInt* rankIndex, int rank) {
     for (int i = 0; i < currentSize; ++i) {
-        if (laptops[i].rank == rank) {
-            for (int j = i; j < currentSize - 1; ++j) {
+        if (rankIndex[i].key == rank) {
+            int toDelete = rankIndex[i].recordIndex;
+
+            for (int j = toDelete; j < currentSize - 1; ++j) {
                 laptops[j] = laptops[j + 1];
             }
             --currentSize;
+
             cout << "Компания удалена.\n";
+            return;
+        }
+    }
+    cout << "Компания с указанным местом в рейтинге не найдена.\n";
+}
+
+void editCompany(IndexInt* rankIndex, int rank) {
+    for (int i = 0; i < currentSize; ++i) {
+        if (rankIndex[i].key == rank) {
+            int edit = rankIndex[i].recordIndex;
+
+            cout << "Введите новые данные компании:\n";
+            cout << "Место в рейтинге: ";
+            cin >> laptops[edit].rank;
+            cout << "Название: ";
+            cin >> laptops[edit].name;
+            cout << "Год основания: ";
+            cin >> laptops[edit].year;
+            cout << "Место основания: ";
+            cin >> laptops[edit].place;
+            cout << "Доля на рынке: ";
+            cin >> laptops[edit].market;
+            cout << "Капитализация (в млрд $): ";
+            cin >> laptops[edit].capital;
+
+            cout << "Обновленные данные:\n";
+            printLaptop(laptops[edit]);
             return;
         }
     }
@@ -222,41 +252,11 @@ int findIndexByRank(int rank) {
             return i;
         }
     }
-    return -1; 
-}
-
-void editCompany(int rank) {
-    int edit = -1;
-
-    for (int i = 0; i < currentSize; ++i) {
-        if (laptops[i].rank == rank)
-            edit = i;
-    }
-
-    if (edit == -1) {
-        cout << "Компания с указанным местом в рейтинге не найдена.\n";
-        return;
-    }
-
-    cout << "Введите новые данные компании:\n";
-    cout << "Место в рейтинге: ";
-    cin >> laptops[edit].rank;
-    cout << "Название: ";
-    cin >> laptops[edit].name;
-    cout << "Год основания: ";
-    cin >> laptops[edit].year;
-    cout << "Место основания: ";
-    cin >> laptops[edit].place;
-    cout << "Доля на рынке: ";
-    cin >> laptops[edit].market;
-    cout << "Капитализация (в млрд $): ";
-    cin >> laptops[edit].capital;
-
-    cout << "Обновленные данные:\n";
-    printLaptop(laptops[edit]);
+    return -1;
 }
 
 int main() {
+
     SetConsoleCP(1251);
     SetConsoleOutputCP(1251);
 
@@ -304,12 +304,21 @@ int main() {
         case 4:
             newCompany();
             break;
-        case 5:
-            deleteCompanyByName();
+        case 5: {
+            IndexInt nameIndex[maxSize];
+            buildIndexInt(nameIndex, &Laptop::rank); // Можно использовать любой ключ для создания индекса
+            nameDelete(nameIndex);
             break;
-        case 6:
-            deleteCompanyByRank();
+        }
+        case 6: {
+            int rank;
+            cout << "Введите место в рейтинге компании для удаления: ";
+            cin >> rank;
+            IndexInt rankIndex[maxSize];
+            buildIndexInt(rankIndex, &Laptop::rank);
+            rankDelete(rankIndex, rank);
             break;
+        }
         case 7: {
             int rank;
             cout << "Введите место в рейтинге для поиска: ";
@@ -329,10 +338,13 @@ int main() {
             break;
         }
         case 9: {
-            int checkNumber; 
+            int rank;
             cout << "Введите номер компании в рейтинге, которую вы хотите изменить: ";
-            cin >> checkNumber;
-            editCompany(checkNumber);
+            cin >> rank;
+            IndexInt rankIndex[maxSize];
+            buildIndexInt(rankIndex, &Laptop::rank);
+            editCompany(rankIndex, rank);
+            break;
         }
 
         default:
