@@ -1,1 +1,331 @@
+#include <iostream>
+#include <string>
+#include <iomanip>
+#include <windows.h>
+
+using namespace std;
+
+int selectToSort = 1;
+
+struct Laptop {
+    int rank;
+    string name;
+    int year;
+    string place;
+    double market;
+    double capital;
+};
+
+struct Head {
+    Laptop data;
+    Head* next;
+};
+
+// Глобальные указатели для двух списков:
+// headInput – список в порядке ввода (последовательное добавление);
+// headSorted – список, упорядоченный по выбранным атрибутам (здесь по названию, а при равенстве – по году)
+Head* headInput = nullptr;
+Head* tailInput = nullptr;
+Head* headSorted = nullptr;
+
+void printLaptop(const Laptop& laptop) {
+    cout << "Место в рейтинге: " << laptop.rank << "\n";
+    cout << "Название: " << laptop.name << "\n";
+    cout << "Год основания: " << laptop.year << "\n";
+    cout << "Место основания: " << laptop.place << "\n";
+    cout << "Доля на рынке: " << round(laptop.market * 10) / 10 << "%\n"; 
+    cout << "Капитализация: $" << laptop.capital << " млрд\n\n";
+}
+
+void insertInputOrder(const Laptop& laptop) {
+    Head* newHead = new Head;
+    newHead->data = laptop;
+    newHead->next = nullptr;
+    if (headInput == nullptr) {
+        headInput = tailInput = newHead;
+    }
+    else {
+        tailInput->next = newHead;
+        tailInput = newHead;
+    }
+}
+
+bool compareCompany(const Laptop& first, const Laptop& second) {
+    if (first.name < second.name)
+        return true;
+    else if (first.name == second.name)
+        return first.year < second.year;
+    else
+        return false;
+}
+
+void insertSorted(Head*& head, Head* newNode) {
+    if (head == nullptr || compareCompany(newNode->data, head->data)) {
+        newNode->next = head;
+        head = newNode;
+    }
+    else {
+        Head* current = head;
+        while (current->next != nullptr && !compareCompany(newNode->data, current->next->data)) {
+            current = current->next;
+        }
+        newNode->next = current->next;
+        current->next = newNode;
+    }
+}
+
+void addToSortedOrder(const Laptop& laptop) {
+    Head* newHead = new Head;
+    newHead->data = laptop;
+    newHead->next = nullptr;
+    insertSorted(headSorted, newHead);
+}
+
+void addCompany() {
+    Laptop laptop;
+    cout << "Введите данные новой компании:\n";
+    if (tailInput != nullptr)
+        laptop.rank = tailInput->data.rank + 1;
+    else
+        laptop.rank = 1;
+    cout << "Название: ";
+    cin >> laptop.name;
+    cout << "Год основания: ";
+    cin >> laptop.year;
+    cout << "Место основания: ";
+    cin >> laptop.place;
+    cout << "Доля на рынке: ";
+    cin >> laptop.market;
+    cout << "Капитализация (в млрд $): ";
+    cin >> laptop.capital;
+
+    insertInputOrder(laptop);
+    addToSortedOrder(laptop);
+
+    cout << "Компания добавлена.\n";
+}
+
+void printInputList() {
+    cout << "\nЗаписи в порядке ввода:\n";
+    Head* current = headInput;
+    int count = 1;
+    while (current) {
+        cout << "Запись " << count++ << ":\n";
+        printLaptop(current->data);
+        current = current->next;
+    }
+}
+
+void printSortedList() {
+    cout << "\nЗаписи в порядке возрастания (по названию и году):\n";
+    Head* current = headSorted;
+    while (current) {
+        printLaptop(current->data);
+        current = current->next;
+    }
+} 
+
+void printSortedListDescending(Head* Head) { // Рекурсивный вывод записей в обратном порядке (убывание)
+    if (Head == nullptr)
+        return;
+    printSortedListDescending(Head->next);
+    printLaptop(Head->data);
+}
+
+void printSortedListDesc() {
+    cout << "\nЗаписи в порядке убывания (по названию и году):\n";
+    printSortedListDescending(headSorted);
+}
+
+Head* searchByName(Head* head, const string& name) { // Поиск компании по названию в сортированном списке
+    Head* current = head;
+    while (current) {
+        if (current->data.name == name)
+            return current;
+        current = current->next;
+    }
+    return nullptr;
+}
+
+void searchCompanyName() {
+    string name;
+    cout << "Введите название компании для поиска: ";
+    cin >> name;
+    Head* found = searchByName(headSorted, name);
+    if (found) {
+        cout << "\nКомпания найдена:\n";
+        printLaptop(found->data);
+    }
+    else {
+        cout << "Компания с названием " << name << " не найдена.\n";
+    }
+}
+
+Head* searchByMarket(Head* head, const double& market) {
+    Head* current = head;
+    while (current) {
+        if (current->data.market == market)
+            return current;
+        current = current->next;
+    }
+    return nullptr;
+}
+
+void searchCompanyMarket() {
+    double market;
+    cout << "Введите долю компании (без процентов) для поиска: ";
+    cin >> market;
+    Head* found = searchByMarket(headSorted, market);
+    if (found) {
+        cout << "\nКомпания найдена:\n";
+        printLaptop(found->data);
+    }
+    else {
+        cout << "Компания с долей в" << market << "% не найдена.\n";
+    }
+}
+
+bool deleteFromListName(Head*& head, const string& name) {
+    if (head == nullptr)
+        return false;
+    if (head->data.name == name) {
+        Head* temp = head;
+        head = head->next;
+        delete temp;
+        return true;
+    }
+    Head* current = head;
+    while (current->next) {
+        if (current->next->data.name == name) {
+            Head* temp = current->next;
+            current->next = temp->next;
+            delete temp;
+            return true;
+        }
+        current = current->next;
+    }
+    return false;
+}
+
+void deleteCompanyName() { // Удаление компании из обоих списков по названию
+    string name;
+    cout << "Введите название компании для удаления: ";
+    cin >> name;
+    bool deletedInput = deleteFromListName(headInput, name);
+    bool deletedSorted = deleteFromListName(headSorted, name);
+    if (deletedInput && deletedSorted)
+        cout << "Компания удалена.\n";
+    else
+        cout << "Компания с названием " << name << " не найдена.\n";
+}
+
+bool deleteFromListMarket(Head*& head, const double& market) {
+    if (head == nullptr)
+        return false;
+    if (head->data.market == market) {
+        Head* temp = head;
+        head = head->next;
+        delete temp;
+        return true;
+    }
+    Head* current = head;
+    while (current->next) {
+        if (current->next->data.market == market) {
+            Head* temp = current->next;
+            current->next = temp->next;
+            delete temp;
+            return true;
+        }
+        current = current->next;
+    }
+    return false;
+}
+
+void deleteCompanyMarket() { // Удаление компании из обоих списков по доле
+    double market;
+    cout << "Введите долю (без процентов) компании для удаления: ";
+    cin >> market;
+    bool deletedInput = deleteFromListMarket(headInput, market);
+    bool deletedSorted = deleteFromListMarket(headSorted, market);
+    if (deletedInput && deletedSorted)
+        cout << "Компания удалена.\n";
+    else
+        cout << "Компания с долей в " << market << "% не найдена.\n";
+}
+
+void loadInitialData() {
+    Laptop companies[5] = {
+        {1, "Lenovo", 1984, "Китай", 24.8, 16},
+        {2, "HP", 1939, "США", 21.9, 27},
+        {3, "Dell", 1984, "США", 16.6, 28},
+        {4, "Apple", 1976, "США", 9.0, 2890},
+        {5, "Asus", 1989, "Тайвань", 7.1, 11}
+    };
+    for (int i = 0; i < 5; i++) {
+        insertInputOrder(companies[i]);
+        addToSortedOrder(companies[i]);
+    }
+}
+
+void showMenu() {
+    cout << "\nМеню:\n";
+    cout << "1. Вывести записи в порядке ввода\n";
+    cout << "2. Вывести записи в порядке возрастания (по названию и году)\n";
+    cout << "3. Вывести записи в порядке убывания (по названию и году)\n";
+    cout << "4. Добавить новую компанию\n";
+    cout << "5. Поиск компании по названию\n";
+    cout << "6. Поиск компании по доле\n";
+    cout << "7. Удалить компанию по названию\n";
+    cout << "8. Удалить компанию по доле\n";
+    cout << "0. Выход\n";
+    cout << "Выберите действие: ";
+}
+
+int main() {
+    SetConsoleCP(1251);
+    SetConsoleOutputCP(1251);
+
+    cout << "Задание 3. Создание линейных списков с сортировкой элементов\n";
+
+    loadInitialData();
+
+    int choice;
+    do {
+        showMenu();
+        cin >> choice;
+        switch (choice) {
+        case 1:
+            printInputList();
+            break;
+        case 2:
+            printSortedList();
+            break;
+        case 3:
+            printSortedListDesc();
+            break;
+        case 4:
+            addCompany();
+            break;
+        case 5:
+            searchCompanyName();
+            break;
+        case 6:
+            searchCompanyMarket();
+            break;
+        case 7:
+            deleteCompanyName();
+            break;
+        case 8:
+            deleteCompanyMarket();
+            break;
+        case 0:
+            cout << "Выход из программы...\n";
+            break;
+        default:
+            cout << "Неверный выбор. Попробуйте снова.\n";
+        }
+    } while (choice != 0);
+
+    return 0;
+}
 
