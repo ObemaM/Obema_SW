@@ -219,7 +219,6 @@ void yearIterative(IndexInt* indexArray, int year) {
     cout << "Компания с указанным годом основания не найдена.\n";
 }
 
-
 void newCompany() {
     if (currentSize >= maxSize) {
         cout << "Массив заполнен, невозможно добавить новую компанию.\n";
@@ -228,8 +227,6 @@ void newCompany() {
 
     Laptop laptop;
     cout << "Введите данные новой компании:\n";
-    cout << "Место в рейтинге: ";
-    cin >> laptop.rank;
     cout << "Название: ";
     cin >> laptop.name;
     cout << "Год основания: ";
@@ -241,9 +238,35 @@ void newCompany() {
     cout << "Капитализация (в млрд $): ";
     cin >> laptop.capital;
 
-    laptops[currentSize++] = laptop;
-    cout << "Компания добавлена!\n";
+    int left = 0;
+    int right = currentSize - 1;
+    int insertIndex = currentSize; 
+
+    while (left <= right) {
+        int mid = left + (right - left) / 2;
+        if (laptops[mid].market > laptop.market) {
+            left = mid + 1; 
+        }
+        else {
+            insertIndex = mid; 
+            right = mid - 1; 
+        }
+    }
+
+    for (int i = currentSize; i > insertIndex; i--) {
+        laptops[i] = laptops[i - 1];
+    }
+
+    laptops[insertIndex] = laptop;
+    currentSize++;
+
+    for (int i = 0; i < currentSize; ++i) {
+        laptops[i].rank = i + 1;
+    }
+
+    cout << "\nКомпания добавлена и размещена в рейтинге\n";
 }
+
 
 int findIndexByRank(int rank) {
     for (int i = 0; i < currentSize; ++i) {
@@ -259,7 +282,8 @@ int main() {
     SetConsoleCP(1251);
     SetConsoleOutputCP(1251);
 
-    cout << "Задание 1\n";
+    cout << "Задание 1";
+    cout << "\nРейтинг выстроен по капитализации\n";
 
     loadData();
 
