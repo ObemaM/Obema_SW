@@ -30,21 +30,6 @@ IndexDoub* marketIndex = new IndexDoub[maxSize];
 IndexDoub* capitalIndex = new IndexDoub[maxSize];
 int currentSize = 0;
 
-void showMenu() {
-    cout << "\nМеню:\n";
-    cout << "1. Показать все компании\n";
-    cout << "2. Сортировать и вывести по доле на рынке (через индекс)\n";
-    cout << "3. Сортировать и вывести по капитализации (через индекс)\n";
-    cout << "4. Добавить компанию\n";
-    cout << "5. Удалить компанию по названию\n";
-    cout << "6. Удалить компанию по месту в рейтинге\n";
-    cout << "7. Поиск рекурсией по рейтингу\n";
-    cout << "8. Поиск итерацией по году основания\n";
-    cout << "9. Редактировать компанию\n";
-    cout << "0. Выход\n";
-    cout << "Выберите действие: ";
-}
-
 void loadData() {
     currentSize = 5;
     laptops[0] = { 1, "Lenovo", 1984, "Китай", 24.8, 16 };
@@ -221,7 +206,7 @@ void yearIterative(IndexInt* indexArray, int year) {
 
 void newCompany() {
     if (currentSize >= maxSize) {
-        cout << "Массив заполнен, невозможно добавить новую компанию.\n";
+        cout << "\nВведено максимальное количество компаний - " << maxSize << "\n";
         return;
     }
 
@@ -239,16 +224,9 @@ void newCompany() {
     cin >> laptop.market;
     cout << "Капитализация (в млрд $): ";
     cin >> laptop.capital;
-}
 
-
-int findIndexByRank(int rank) {
-    for (int i = 0; i < currentSize; ++i) {
-        if (laptops[i].rank == rank) {
-            return i;
-        }
-    }
-    return -1;
+    laptops[currentSize] = laptop;
+    currentSize++;
 }
 
 int main() {
@@ -256,13 +234,24 @@ int main() {
     SetConsoleCP(1251);
     SetConsoleOutputCP(1251);
 
-    cout << "Задание 1";
-    cout << "\nРейтинг выстроен по капитализации\n";
+    cout << "Задание 1. Массивы\n";
 
     loadData();
 
     while (true) {
-        showMenu();
+        cout << "\nМеню:\n";
+        cout << "1. Показать все компании\n";
+        cout << "2. Сортировать и вывести по доле на рынке (через индекс)\n";
+        cout << "3. Сортировать и вывести по капитализации (через индекс)\n";
+        cout << "4. Добавить компанию\n";
+        cout << "5. Удалить компанию по названию\n";
+        cout << "6. Удалить компанию по месту в рейтинге\n";
+        cout << "7. Поиск рекурсией по рейтингу\n";
+        cout << "8. Поиск итерацией по году основания\n";
+        cout << "9. Редактировать компанию\n";
+        cout << "0. Выход\n";
+        cout << "Выберите действие: ";
+
         int choice;
         cin >> choice;
 
@@ -301,12 +290,11 @@ int main() {
         case 4:
             newCompany();
             break;
-        case 5: {
+        case 5:
             IndexInt nameIndex[maxSize];
-            buildIndexInt(nameIndex, &Laptop::rank); // Можно использовать любой ключ для создания индекса
+            buildIndexInt(nameIndex, &Laptop::rank);
             nameDelete(nameIndex);
             break;
-        }
         case 6: {
             int rank;
             cout << "Введите место в рейтинге компании для удаления: ";
@@ -343,7 +331,6 @@ int main() {
             editCompany(rankIndex, rank);
             break;
         }
-
         default:
             cout << "Неверный выбор. Попробуйте еще раз.\n";
         }
