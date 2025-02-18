@@ -1,1 +1,231 @@
+#include <iostream>
+#include <string>
+#include <iomanip>
+#include <windows.h>
+
+using namespace std;
+
+struct Laptop{
+    int rank;
+    string name;
+    int year;
+    string place;
+    double market;
+    double capital;
+};
+
+struct Head {
+    Laptop data;
+    Head* next;
+};
+
+Head* headInput = nullptr;
+Head* tailInput = nullptr;
+Head* sortedName = nullptr;
+Head* sortedMarket = nullptr;
+int maxSize = 10;
+int currentSize = 0;
+
+void printLaptop(Laptop& laptop) {
+    cout << "Место в рейтинге: " << laptop.rank << "\n";
+    cout << "Название: " << laptop.name << "\n";
+    cout << "Год основания: " << laptop.year << "\n";
+    cout << "Место основания: " << laptop.place << "\n";
+    cout << "Доля на рынке: " << round(laptop.market * 10) / 10 << "%\n";
+    cout << "Капитализация: $" << laptop.capital << " млрд\n\n";
+}
+
+void addSomething(Laptop& laptop) {
+    Head* newHead = new Head; 
+    newHead->data = laptop;
+    newHead->next = nullptr;
+
+    if (headInput == nullptr)
+        headInput = tailInput = nullptr;
+    else
+    {
+        tailInput->next = newHead;
+        tailInput = newHead;
+    }
+}
+
+bool compareCompanyName(Laptop& first, Laptop& second) {
+    if (first.name < second.name)
+        return true;
+    else
+        return false;
+}
+
+bool compareCompanyMarket(Laptop& first, Laptop& second) {
+    if (first.market < second.market)
+        return true;
+    else
+        return false;
+}
+
+void insertSortedName(Head*& head, Head* newNode) {
+    if (head == nullptr || compareCompanyName(newNode->data, head->data)) {
+        newNode->next = head;
+        head = newNode;
+    }
+    else {
+        Head* current = head;
+        while (current->next != nullptr && !compareCompanyName(newNode->data, current->next->data)) {
+            current = current->next;
+        }
+        newNode->next = current->next;
+        current->next = newNode;
+    }
+}
+
+void insertSortedMarket(Head*& head, Head* newNode) {
+    if (head == nullptr || compareCompanyMarket(newNode->data, head->data)) {
+        newNode->next = head;
+        head = newNode;
+    }
+    else {
+        Head* current = head;
+        while (current->next != nullptr && !compareCompanyMarket(newNode->data, current->next->data)) {
+            current = current->next;
+        }
+        newNode->next = current->next;
+        current->next = newNode;
+    }
+}
+
+void addToSortedOrderMarket(Laptop& laptop) {
+    Head* newHead = new Head;
+    newHead->data = laptop;
+    newHead->next = nullptr;
+    insertSortedMarket(sortedMarket, newHead);
+}
+
+void addToSortedOrderName(Laptop& laptop) {
+    Head* newHead = new Head;
+    newHead->data = laptop;
+    newHead->next = nullptr;
+    insertSortedName(sortedMarket, newHead);
+}
+
+void loadInitialData() {
+    const int n = 5;
+    currentSize = currentSize + n;
+    Laptop companies[n] = {
+        {1, "Lenovo", 1984, "Китай", 24.8, 16},
+        {2, "HP", 1939, "США", 21.9, 27},
+        {3, "Dell", 1984, "США", 16.6, 28},
+        {4, "Apple", 1976, "США", 9.0, 2890},
+        {5, "Asus", 1989, "Тайвань", 7.1, 11}
+    };
+    for (int i = 0; i < 5; i++) {
+        addSomething(companies[i]);
+        addToSortedOrderMarket(companies[i]);
+        addToSortedOrderName(companies[i]);
+    }
+}
+
+void addCompany() {
+    if (currentSize == maxSize) {
+        cout << "Введено максимальное количество компаний - " << maxSize;
+    }
+    else {
+        Laptop laptop;
+        cout << "Введите данные новой компании:\n";
+        cout << "Введите ранг: ";
+        cin >> laptop.rank;
+        cout << "Название: ";
+        cin >> laptop.name;
+        cout << "Год основания: ";
+        cin >> laptop.year;
+        cout << "Место основания: ";
+        cin >> laptop.place;
+        cout << "Доля на рынке: ";
+        cin >> laptop.market;
+        cout << "Капитализация (в млрд $): ";
+        cin >> laptop.capital;
+
+        addSomething(laptop);
+        addToSortedOrderMarket(laptop);
+        addToSortedOrderName(laptop);
+        currentSize++;
+
+        cout << "\nКомпания добавлена.\n";
+    };
+}
+
+void showMenu() {
+    cout << "\nМеню:\n";
+    cout << "1. Вывести записи в порядке ввода\n";
+    cout << "2. Вывести записи в порядке возрастания по названию\n";
+    cout << "3. Вывести записи в порядке убывания по названию\n";
+    cout << "4. Вывести записи в порядке возрастания по доле\n";
+    cout << "5. Вывести записи в порядке убывания по доле\n";
+    cout << "6. Добавить новую компанию\n";
+    cout << "7. Поиск компании по названию\n";
+    cout << "8. Поиск компании по доле\n";
+    cout << "9. Удалить компанию по названию\n";
+    cout << "10. Удалить компанию по доле\n";
+    cout << "0. Выход\n";
+    cout << "Выберите действие: ";
+}
+
+void printInputList(){
+    Head* newHead = new Head;
+    newHead->data = laptop;
+    newHead->next = nullptr;
+}
+
+int main() {
+    SetConsoleCP(1251);
+    SetConsoleOutputCP(1251);
+
+    cout << "Задание 3. Списки\n";
+
+    loadInitialData();
+
+    int choice;
+    do {
+        showMenu();
+        cin >> choice;
+        switch (choice) {
+        case 1:
+            printInputList();
+            break;
+        case 2:
+            printSortedList();
+            break;
+        case 3:
+            printSortedListDesc();
+            break;
+        case 4:
+            addCompany();
+            break;
+        case 5:
+            searchCompanyName();
+            break;
+        case 6:
+            searchCompanyMarket();
+            break;
+        case 7:
+            deleteCompanyName();
+            break;
+        case 8:
+            deleteCompanyMarket();
+            break;
+        case 9:
+            deleteCompanyMarket();
+            break;
+        case 10:
+            deleteCompanyMarket();
+            break;
+        case 0:
+            cout << "Выход из программы...\n";
+            break;
+        default:
+            cout << "Неверный выбор. Попробуйте снова.\n";
+        }
+    } while (choice != 0);
+
+    return 0;
+}
 
