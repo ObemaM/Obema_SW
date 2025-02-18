@@ -5,8 +5,6 @@
 
 using namespace std;
 
-int selectToSort = 1;
-
 struct Laptop {
     int rank;
     string name;
@@ -17,244 +15,97 @@ struct Laptop {
 };
 
 struct Head {
-    Laptop data;
+    Laptop info;
     Head* next;
 };
 
-// Глобальные указатели для двух списков:
-// headInput – список в порядке ввода (последовательное добавление);
-// headSorted – список, упорядоченный по выбранным атрибутам (здесь по названию, а при равенстве – по году)
 Head* headInput = nullptr;
-Head* tailInput = nullptr;
-Head* headSorted = nullptr;
+Head* endInput = nullptr;
+Head* sortedName = nullptr;
+Head* sortedMarket = nullptr;
+int maxSize = 10;
+int currentSize = 0;
 
-void printLaptop(const Laptop& laptop) {
-    cout << "Место в рейтинге: " << laptop.rank << "\n";
+void printLaptop(Laptop& laptop) {
+    cout << "\nМесто в рейтинге: " << laptop.rank << "\n";
     cout << "Название: " << laptop.name << "\n";
     cout << "Год основания: " << laptop.year << "\n";
     cout << "Место основания: " << laptop.place << "\n";
-    cout << "Доля на рынке: " << round(laptop.market * 10) / 10 << "%\n"; 
-    cout << "Капитализация: $" << laptop.capital << " млрд\n\n";
+    cout << "Доля на рынке: " << round(laptop.market * 10) / 10 << "%\n";
+    cout << "Капитализация: $" << laptop.capital << " млрд\n";
 }
 
-void insertInputOrder(const Laptop& laptop) {
+void addSomething(Laptop& laptop) {
     Head* newHead = new Head;
-    newHead->data = laptop;
+    newHead->info = laptop;
     newHead->next = nullptr;
-    if (headInput == nullptr) {
-        headInput = tailInput = newHead;
-    }
-    else {
-        tailInput->next = newHead;
-        tailInput = newHead;
+
+    if (headInput == nullptr)
+        headInput = endInput = newHead;
+    else
+    {
+        endInput->next = newHead;
+        endInput = newHead;
     }
 }
 
-bool compareCompany(const Laptop& first, const Laptop& second) {
+bool compareCompanyName(Laptop& first, Laptop& second) {
     if (first.name < second.name)
         return true;
-    else if (first.name == second.name)
-        return first.year < second.year;
     else
         return false;
 }
 
-void insertSorted(Head*& head, Head* newNode) {
-    if (head == nullptr || compareCompany(newNode->data, head->data)) {
-        newNode->next = head;
-        head = newNode;
+bool compareCompanyMarket(Laptop& first, Laptop& second) {
+    if (first.market < second.market)
+        return true;
+    else
+        return false;
+}
+
+void MarketSorted(Head*& sortedMarket, Laptop& laptop) {
+    Head* newHead = new Head;
+    newHead->info = laptop;
+    newHead->next = nullptr;
+
+    if (sortedMarket == nullptr || compareCompanyMarket(newHead->info, sortedMarket->info)) {
+        newHead->next = sortedMarket;
+        sortedMarket = newHead;
     }
     else {
-        Head* current = head;
-        while (current->next != nullptr && !compareCompany(newNode->data, current->next->data)) {
+        Head* current = sortedMarket;
+        while (current->next != nullptr && !compareCompanyMarket(newHead->info, current->next->info)) {
             current = current->next;
         }
-        newNode->next = current->next;
-        current->next = newNode;
+        newHead->next = current->next;
+        current->next = newHead;
     }
 }
 
-void addToSortedOrder(const Laptop& laptop) {
+void NameSorted(Head*& sortedName, Laptop& laptop) {
     Head* newHead = new Head;
-    newHead->data = laptop;
+    newHead->info = laptop;
     newHead->next = nullptr;
-    insertSorted(headSorted, newHead);
-}
 
-void addCompany() {
-    Laptop laptop;
-    cout << "Введите данные новой компании:\n";
-    if (tailInput != nullptr)
-        laptop.rank = tailInput->data.rank + 1;
-    else
-        laptop.rank = 1;
-    cout << "Название: ";
-    cin >> laptop.name;
-    cout << "Год основания: ";
-    cin >> laptop.year;
-    cout << "Место основания: ";
-    cin >> laptop.place;
-    cout << "Доля на рынке: ";
-    cin >> laptop.market;
-    cout << "Капитализация (в млрд $): ";
-    cin >> laptop.capital;
-
-    insertInputOrder(laptop);
-    addToSortedOrder(laptop);
-
-    cout << "Компания добавлена.\n";
-}
-
-void printInputList() {
-    cout << "\nЗаписи в порядке ввода:\n";
-    Head* current = headInput;
-    int count = 1;
-    while (current) {
-        cout << "Запись " << count++ << ":\n";
-        printLaptop(current->data);
-        current = current->next;
-    }
-}
-
-void printSortedList() {
-    cout << "\nЗаписи в порядке возрастания (по названию и году):\n";
-    Head* current = headSorted;
-    while (current) {
-        printLaptop(current->data);
-        current = current->next;
-    }
-} 
-
-void printSortedListDescending(Head* Head) { // Рекурсивный вывод записей в обратном порядке (убывание)
-    if (Head == nullptr)
-        return;
-    printSortedListDescending(Head->next);
-    printLaptop(Head->data);
-}
-
-void printSortedListDesc() {
-    cout << "\nЗаписи в порядке убывания (по названию и году):\n";
-    printSortedListDescending(headSorted);
-}
-
-Head* searchByName(Head* head, const string& name) { // Поиск компании по названию в сортированном списке
-    Head* current = head;
-    while (current) {
-        if (current->data.name == name)
-            return current;
-        current = current->next;
-    }
-    return nullptr;
-}
-
-void searchCompanyName() {
-    string name;
-    cout << "Введите название компании для поиска: ";
-    cin >> name;
-    Head* found = searchByName(headSorted, name);
-    if (found) {
-        cout << "\nКомпания найдена:\n";
-        printLaptop(found->data);
+    if (sortedName == nullptr || compareCompanyName(newHead->info, sortedName->info)) {
+        newHead->next = sortedName;
+        sortedName = newHead;
     }
     else {
-        cout << "Компания с названием " << name << " не найдена.\n";
-    }
-}
-
-Head* searchByMarket(Head* head, const double& market) {
-    Head* current = head;
-    while (current) {
-        if (current->data.market == market)
-            return current;
-        current = current->next;
-    }
-    return nullptr;
-}
-
-void searchCompanyMarket() {
-    double market;
-    cout << "Введите долю компании (без процентов) для поиска: ";
-    cin >> market;
-    Head* found = searchByMarket(headSorted, market);
-    if (found) {
-        cout << "\nКомпания найдена:\n";
-        printLaptop(found->data);
-    }
-    else {
-        cout << "Компания с долей в" << market << "% не найдена.\n";
-    }
-}
-
-bool deleteFromListName(Head*& head, const string& name) {
-    if (head == nullptr)
-        return false;
-    if (head->data.name == name) {
-        Head* temp = head;
-        head = head->next;
-        delete temp;
-        return true;
-    }
-    Head* current = head;
-    while (current->next) {
-        if (current->next->data.name == name) {
-            Head* temp = current->next;
-            current->next = temp->next;
-            delete temp;
-            return true;
+        Head* current = sortedName;
+        while (current->next != nullptr && !compareCompanyName(newHead->info, current->next->info)) {
+            current = current->next;
         }
-        current = current->next;
+        newHead->next = current->next;
+        current->next = newHead;
     }
-    return false;
 }
 
-void deleteCompanyName() { // Удаление компании из обоих списков по названию
-    string name;
-    cout << "Введите название компании для удаления: ";
-    cin >> name;
-    bool deletedInput = deleteFromListName(headInput, name);
-    bool deletedSorted = deleteFromListName(headSorted, name);
-    if (deletedInput && deletedSorted)
-        cout << "Компания удалена.\n";
-    else
-        cout << "Компания с названием " << name << " не найдена.\n";
-}
-
-bool deleteFromListMarket(Head*& head, const double& market) {
-    if (head == nullptr)
-        return false;
-    if (head->data.market == market) {
-        Head* temp = head;
-        head = head->next;
-        delete temp;
-        return true;
-    }
-    Head* current = head;
-    while (current->next) {
-        if (current->next->data.market == market) {
-            Head* temp = current->next;
-            current->next = temp->next;
-            delete temp;
-            return true;
-        }
-        current = current->next;
-    }
-    return false;
-}
-
-void deleteCompanyMarket() { // Удаление компании из обоих списков по доле
-    double market;
-    cout << "Введите долю (без процентов) компании для удаления: ";
-    cin >> market;
-    bool deletedInput = deleteFromListMarket(headInput, market);
-    bool deletedSorted = deleteFromListMarket(headSorted, market);
-    if (deletedInput && deletedSorted)
-        cout << "Компания удалена.\n";
-    else
-        cout << "Компания с долей в " << market << "% не найдена.\n";
-}
 
 void loadInitialData() {
-    Laptop companies[5] = {
+    const int n = 5;
+    currentSize = n;
+    Laptop companies[n] = {
         {1, "Lenovo", 1984, "Китай", 24.8, 16},
         {2, "HP", 1939, "США", 21.9, 27},
         {3, "Dell", 1984, "США", 16.6, 28},
@@ -262,60 +113,260 @@ void loadInitialData() {
         {5, "Asus", 1989, "Тайвань", 7.1, 11}
     };
     for (int i = 0; i < 5; i++) {
-        insertInputOrder(companies[i]);
-        addToSortedOrder(companies[i]);
+        addSomething(companies[i]);
+        MarketSorted(sortedMarket, companies[i]);
+        NameSorted(sortedName, companies[i]);
     }
 }
 
-void showMenu() {
-    cout << "\nМеню:\n";
-    cout << "1. Вывести записи в порядке ввода\n";
-    cout << "2. Вывести записи в порядке возрастания (по названию и году)\n";
-    cout << "3. Вывести записи в порядке убывания (по названию и году)\n";
-    cout << "4. Добавить новую компанию\n";
-    cout << "5. Поиск компании по названию\n";
-    cout << "6. Поиск компании по доле\n";
-    cout << "7. Удалить компанию по названию\n";
-    cout << "8. Удалить компанию по доле\n";
-    cout << "0. Выход\n";
-    cout << "Выберите действие: ";
+void addCompany() {
+    if (currentSize == maxSize) {
+        cout << "\nВведено максимальное количество компаний - " << maxSize << "\n";
+    }
+    else {
+        Laptop laptop;
+        cout << "\nВведите данные новой компании:\n";
+        cout << "Введите ранг: ";
+        cin >> laptop.rank;
+        cout << "Название: ";
+        cin >> laptop.name;
+        cout << "Год основания: ";
+        cin >> laptop.year;
+        cout << "Место основания: ";
+        cin >> laptop.place;
+        cout << "Доля на рынке: ";
+        cin >> laptop.market;
+        cout << "Капитализация (в млрд $): ";
+        cin >> laptop.capital;
+
+        addSomething(laptop);
+        MarketSorted(sortedMarket, laptop);
+        NameSorted(sortedName, laptop);
+        currentSize++;
+
+        cout << "\nКомпания добавлена.\n";
+    };
+}
+
+void printInputList() {
+    cout << "\nЗаписи в порядке ввода: \n";
+    Head* current = headInput;
+    int start = 1;
+    while (current != nullptr)
+    {
+        cout << "\nЗапись " << start << ": \n";
+        start++;
+        printLaptop(current->info);
+        current = current->next;
+    }
+}
+
+void upName() {
+    Head* current = sortedName;
+    while (current != nullptr)
+    {
+        printLaptop(current->info);
+        current = current->next;
+    }
+}
+
+void upMarket() {
+    Head* current = sortedMarket;
+    while (current != nullptr)
+    {
+        printLaptop(current->info);
+        current = current->next;
+    }
+}
+
+void printSortedReverse(Head* reverse) {
+    if (reverse == nullptr)
+        return;
+    printSortedReverse(reverse->next);
+    printLaptop(reverse->info);
+}
+
+void printReverseName() {
+    cout << "\nЗаписи в порядке убывания по названию:\n";
+    printSortedReverse(sortedName);
+}
+
+void printReverseMarket() {
+    cout << "\nЗаписи в порядке убывания по названию:\n";
+    printSortedReverse(sortedMarket);
+}
+
+bool deleteAllNames(Head*& head, const string& name) {
+    if (head == nullptr)
+        return false;
+    if (head->info.name == name) {
+        Head* temp = head;
+        head = head->next;
+        delete temp;
+        return true;
+    }
+    Head* current = head;
+    while (current->next) {
+        if (current->next->info.name == name) {
+            Head* temp = current->next;
+            current->next = temp->next;
+            delete temp;
+            return true;
+        }
+        current = current->next;
+    }
+    return false;
+}
+
+void deleteCompanyName() { 
+    string name;
+    cout << "\nВведите название компании для удаления: ";
+    cin >> name;
+    bool deletedInput = deleteAllNames(headInput, name);
+    bool deletedSorted = deleteAllNames(sortedName, name);
+    bool deletedSortedMarket = deleteAllNames(sortedMarket, name);
+    if (deletedInput && deletedSorted && deletedSortedMarket)
+        cout << "\nКомпания удалена.\n";
+    else
+        cout << "\nКомпания с названием " << name << " не найдена.\n";
+}
+
+bool deleteAllMarkets(Head*& head, const double& market) {
+    if (head == nullptr)
+        return false;
+    if (head->info.market == market) {
+        Head* temp = head;
+        head = head->next;
+        delete temp;
+        return true;
+    }
+    Head* current = head;
+    while (current->next) {
+        if (current->next->info.market == market) {
+            Head* temp = current->next;
+            current->next = temp->next;
+            delete temp;
+            return true;
+        }
+        current = current->next;
+    }
+    return false;
+}
+
+void deleteCompanyMarket() {
+    double market;
+    cout << "\nВведите долю (без процентов) компании для удаления: ";
+    cin >> market;
+    bool deletedInput = deleteAllMarkets(headInput, market);
+    bool deletedSorted = deleteAllMarkets(sortedMarket, market);
+    bool deletedSortedName = deleteAllMarkets(sortedName, market);
+    if (deletedInput && deletedSorted && deletedSortedName)
+        cout << "\nКомпания удалена.\n";
+    else
+        cout << "\nКомпания с долей в " << market << "% не найдена.\n";
+}
+
+Head* recursiveSearchMarket(Head* head, double market) {
+    if (head == nullptr)
+        return nullptr;
+    if (head->info.market == market)
+        return head;
+    return recursiveSearchMarket(head->next, market);
+}
+
+void searchCompanyMarketRecursive(Head* head) {
+    double market;
+    cout << "\nВведите долю компании (без процентов) для поиска: ";
+    cin >> market;
+    Head* found = recursiveSearchMarket(head, market);
+    if (found) {
+        cout << "\nКомпания найдена:\n";
+        printLaptop(found->info);
+    }
+    else {
+        cout << "\nКомпания с долей в " << market << "% не найдена.\n";
+    }
+}
+
+void searchCompanyNameIterative(Head* head) {
+    string name;
+    cout << "Введите название компании для поиска: ";
+    cin >> name;
+
+    Head* current = head;
+    Head* found = nullptr;
+
+    while (current) {
+        if (current->info.name == name) {
+            found = current;
+            break;
+        }
+        current = current->next;
+    }
+
+    if (found) {
+        cout << "\nКомпания найдена:\n";
+        printLaptop(found->info);
+    }
+    else {
+        cout << "\nКомпания с названием " << name << " не найдена.\n";
+    }
 }
 
 int main() {
     SetConsoleCP(1251);
     SetConsoleOutputCP(1251);
 
-    cout << "Задание 3. Создание линейных списков с сортировкой элементов\n";
+    cout << "Задание 3. Списки\n";
 
     loadInitialData();
 
     int choice;
     do {
-        showMenu();
+        cout << "\nМеню:\n";
+        cout << "1. Вывести записи в порядке ввода\n";
+        cout << "2. Вывести записи в порядке возрастания по названию\n";
+        cout << "3. Вывести записи в порядке убывания по названию\n";
+        cout << "4. Вывести записи в порядке возрастания по доле\n";
+        cout << "5. Вывести записи в порядке убывания по доле\n";
+        cout << "6. Добавить новую компанию\n";
+        cout << "7. Поиск компании по названию\n";
+        cout << "8. Поиск компании по доле\n";
+        cout << "9. Удалить компанию по названию\n";
+        cout << "10. Удалить компанию по доле\n";
+        cout << "0. Выход\n";
+        cout << "Выберите действие: ";
+
         cin >> choice;
         switch (choice) {
         case 1:
             printInputList();
             break;
         case 2:
-            printSortedList();
+            upName();
             break;
         case 3:
-            printSortedListDesc();
+            printReverseName();
             break;
         case 4:
-            addCompany();
+            upMarket();
             break;
         case 5:
-            searchCompanyName();
+            printReverseMarket();
             break;
         case 6:
-            searchCompanyMarket();
+            addCompany();
             break;
         case 7:
-            deleteCompanyName();
+            searchCompanyNameIterative(headInput);
             break;
         case 8:
+            searchCompanyMarketRecursive(headInput);
+            break;
+        case 9:
+            deleteCompanyName();
+            break;
+        case 10:
             deleteCompanyMarket();
             break;
         case 0:
@@ -328,4 +379,3 @@ int main() {
 
     return 0;
 }
-
